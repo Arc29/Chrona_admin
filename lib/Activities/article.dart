@@ -1,13 +1,13 @@
-import 'package:chrona_1/Activities/add_article.dart';
+
 import 'package:chrona_1/Activities/question.dart';
-import 'package:chrona_1/UserInfo/state.dart';
+
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
-import 'account.dart';
-import 'main.dart';
+
+
 
 class Article extends StatefulWidget {
   @override
@@ -15,7 +15,7 @@ class Article extends StatefulWidget {
 }
 
 class _ArticleState extends State<Article> {
-  int selectedIndex = 2;
+  int selectedIndex = 1;
   FirebaseDatabase firebaseDatabase = FirebaseDatabase.instance;
   DatabaseReference databaseReferenceArticle;
 
@@ -28,23 +28,17 @@ class _ArticleState extends State<Article> {
     super.initState();
     databaseReferenceArticle = firebaseDatabase.reference().child("Article");
   }
-
-  TextEditingController headerController = new TextEditingController();
-  TextEditingController bodyController = new TextEditingController();
+  
+  
 
   @override
   Widget build(BuildContext context) {
+    TextEditingController t1,t2;
     return Scaffold(
         appBar: AppBar(
-          title: new Text("Articles"),
+          title: new Text("Audit Articles"),
           actions: <Widget>[
-            IconButton(
-              icon: CircleAvatar(
-                radius: 18.0,
-                backgroundImage: NetworkImage(StaticState.user.photoUrl),
-                backgroundColor: Colors.transparent,
-              ),
-            )
+            
           ],
           backgroundColor: Colors.black,
         ),
@@ -54,15 +48,20 @@ class _ArticleState extends State<Article> {
               child: new FirebaseAnimatedList(
                   query: databaseReferenceArticle
                       .orderByChild("verify")
-                      .equalTo(true),
+                      .equalTo(false),
                   padding: new EdgeInsets.all(8.0),
                   reverse: false,
                   itemBuilder: (_, DataSnapshot snapshot,
                       Animation<double> animation, int x) {
-                    headerController.text = snapshot.value["header"];
-                    bodyController.text = snapshot.value["body"];
-                    print(snapshot.value);
-                    debugPrint(snapshot.value["user"]+"  0  "+StaticState.user.email);
+                        TextEditingController t1=TextEditingController();
+                    
+                   TextEditingController t2=TextEditingController();
+                    
+                        t1.text=snapshot.value['header'];t2.text=snapshot.value['body'];
+
+                    
+                    print(t1.text+" "+t2.text);
+                    
                     return Slidable(
                       actionPane: SlidableDrawerActionPane(),
                       actionExtentRatio: 0.20,
@@ -72,15 +71,12 @@ class _ArticleState extends State<Article> {
                           children: <Widget>[
                             Padding(padding: EdgeInsets.all(5.0)),
                             TextFormField(
-                              readOnly: snapshot.value["user"].toString() ==
-                                      StaticState.user.email.toString()
-                                  ? false
-                                  : true,
-                              //initialValue: snapshot.value['header'].toString(),
-                              onEditingComplete: () => OnChanged = true,
+                              readOnly: false,
+                              // initialValue: snapshot.value['header'].toString(),
+                              
                               autocorrect: true,
                               autofocus: false,
-                              controller: headerController,
+                              controller: t1,
                               maxLength: 128,
                               maxLines: null,
                               style: TextStyle(
@@ -101,15 +97,12 @@ class _ArticleState extends State<Article> {
                             ),
                             Padding(padding: EdgeInsets.all(4.0)),
                             TextFormField(
-                              readOnly: snapshot.value["user"].toString() ==
-                                      StaticState.user.email.toString()
-                                  ? false
-                                  : true,
+                              readOnly: false,
                               // initialValue: snapshot.value['body'].toString(),
-                              onEditingComplete: () => OnChanged = true,
+                              
                               autocorrect: true,
                               autofocus: false,
-                              controller: bodyController,
+                              controller: t2,
                               maxLength: 1024,
                               maxLines: null,
                               style: TextStyle(
@@ -139,62 +132,42 @@ class _ArticleState extends State<Article> {
                                   " " + snapshot.value["dislikes"].toString(),
                                   style: TextStyle(color: Colors.red),
                                 ),
-                                Padding(padding: EdgeInsets.only(left: 190.0)),
+                                Padding(padding: EdgeInsets.only(left: 50.0)),
 
                                 RaisedButton(
 
-                                  child: Text("UPDATE"),
-                                  onPressed: snapshot.value["user"].toString() ==
-                                              StaticState.user.email.toString()
-                                          ? ()=>update(snapshot.key)
-                                          : null,
+                                  child: Text("Delete"),
+                                  onPressed:()=> Delete(snapshot.key),
+                                ),
+                                Padding(padding: EdgeInsets.only(left: 30.0)),
+
+                                RaisedButton(
+
+                                  child: Text("Verify"),
+                                  onPressed:()=> Update(t1.text,t2.text,snapshot.key),
                                 ),
                               ],
                             )
                           ],
                         ),
                       ),
-                      secondaryActions: <Widget>[
-                        IconSlideAction(
-                          caption: 'Like',
-                          color: Colors.blue,
-                          icon: Icons.check,
-                          onTap: () => Like(snapshot.key),
-                        ),
-                        IconSlideAction(
-                          caption: 'Dislike',
-                          color: Colors.red,
-                          icon: Icons.clear,
-                          onTap: () => Dislike(snapshot.key),
-                        ),
-                      ],
+                      
                     );
                   }),
             )
           ],
         ),
-        floatingActionButton: FloatingActionButton(
-          child: Icon(Icons.add),
-          elevation: 5.0,
-          onPressed: addArticle,
-          backgroundColor: Colors.redAccent,
-        ),
+        
         bottomNavigationBar: BottomNavigationBar(
           items: <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              title: new Text("Home"),
-            ),
+           
             BottomNavigationBarItem(
                 icon: Icon(Icons.question_answer),
                 title: new Text("Q/A"),
-                backgroundColor: Colors.black),
+                ),
             BottomNavigationBarItem(
-                icon: Icon(Icons.description),
-                title: new Text("Article"),
-                backgroundColor: Colors.black),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.account_circle), title: new Text("Account"))
+                icon: Icon(Icons.description), title: new Text("Article")),
+           
           ],
           currentIndex: selectedIndex,
           selectedItemColor: Colors.red,
@@ -202,49 +175,31 @@ class _ArticleState extends State<Article> {
         ));
   }
 
-  void addArticle() {
-    Navigator.of(context)
-        .push(MaterialPageRoute(builder: (context) => AddArticle()));
+  
+
+Update(String htxt,String btxt,String key) {
+
+    
+      debugPrint(htxt+" "+btxt+" Update");
+      databaseReferenceArticle.child(key).child("header").set(htxt);
+      databaseReferenceArticle.child(key).child("body").set(btxt);
+      databaseReferenceArticle.child(key).child("verify").set(true);
+    
   }
 
-  Like(String key) {
-    databaseReferenceArticle.child(key).once().then((DataSnapshot snapshot) {
-      int likes = snapshot.value["likes"];
-      print("likes are ${likes}");
-      databaseReferenceArticle.child(key).child("likes").set(likes + 1);
-    });
-  }
-
-  Dislike(String key) {
-    databaseReferenceArticle.child(key).once().then((DataSnapshot snapshot) {
-      int dislikes = snapshot.value["dislikes"];
-      print("likes are ${dislikes}");
-      databaseReferenceArticle.child(key).child("dislikes").set(dislikes + 1);
-    });
+  Delete(String key){
+    debugPrint("Delete");
+    databaseReferenceArticle.child(key).remove();
   }
 
   void _ontappeditem(int value) {
+    
     if (value == 0) {
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => NewsMain()));
-      // selectedIndex=0;
-    }
-    if (value == 1) {
-      Navigator.push(
+      Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (context) => Question_Route()));
     }
-    if (value == 3) {
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => Account()));
-      //selectedIndex=2;
-    }
+    
   }
 
-  update(String key) {
-    databaseReferenceArticle
-        .child(key)
-        .child("header")
-        .set(headerController.text);
-    databaseReferenceArticle.child(key).child("body").set(bodyController.text);
-  }
+  
 }
